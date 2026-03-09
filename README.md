@@ -17,6 +17,8 @@ A análise utiliza os dados históricos de estoque e segmentação de criticidad
 	Indicadores de decisão (ressuprimento/redistribuição)
 
 ## Fonte de Dados
+Todas as tabelas estão na pasta `data`.
+
 **Tabela Estoque (tb_estoque)**
 * Tabela com registros diários de estoque
 
