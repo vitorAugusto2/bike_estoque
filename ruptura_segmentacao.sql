@@ -23,7 +23,7 @@ WITH segmentacao_atual AS (
   WHERE rn = 1
 ),
 
-base_unif AS (
+base AS (
   SELECT
     est.codigo  AS codigo_sku,
     est.projeto AS nome_projeto,
@@ -39,6 +39,6 @@ SELECT
   COUNT(*) AS total_registros,
   COUNTIF(saldo_estoque = 0) AS registros_em_ruptura,
   ROUND(SAFE_DIVIDE(COUNTIF(saldo_estoque = 0), COUNT(*)) * 100, 2) AS taxa_ruptura
-FROM base_unif
+FROM base
 GROUP BY segmentacao_prioridade
 ORDER BY taxa_ruptura DESC;
