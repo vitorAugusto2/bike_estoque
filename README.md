@@ -106,7 +106,15 @@ Resultando uma tabela unificada para possiveis análises como ruptura, ressuprim
   	  ```
 
 * **Ação de ressuprimento**
-	- 
+	- Identifica itens com coberturas de dias baixa para reposicao, monitoramento e excesso de estoque.
+	```
+	Regra:
+ 		cobertura < 5 -> ressuprimento
+ 		5 < cobertura < 15 -> monitoramento
+ 		cobertura > 30 -> excesso
+ 	```
+
+* **Sinal de redistribuição**
 
 ## Pontos Importantes
 ### **Ruptura em itens críticos**
