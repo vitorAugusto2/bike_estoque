@@ -1,5 +1,5 @@
 # Análise de Estoque Segmentado
-Este projeto analise o comportamento do estoque de peças utilizadas em operações de bicicletas compartilhas, buscando identificar riscos operacionais, ruptura e redistribuição.
+Este projeto analisa o comportamento do estoque de peças utilizadas em operações de bicicletas compartilhadas, buscando identificar **riscos operacionais**, **rupturas de estoque** e **oportunidades de redistribuição**.
 
 A análise utiliza os dados históricos de estoque e segmentação de criticidade, com objetivo de responder as perguntas:
 1. Onde ocorrem rupturas de estoque?
@@ -17,10 +17,10 @@ A análise utiliza os dados históricos de estoque e segmentação de criticidad
 	Indicadores de decisão (ressuprimento/redistribuição)
 
 ## Fonte de Dados
-Todas as tabelas estão na pasta `data`.
+Todas as tabelas estão localizada na pasta `data`.
 
 **Tabela Estoque (tb_estoque)**
-* Tabela com registros diários de estoque
+* Tabela com registros diários de estoque.
 
 | Campo              | Descrição             |
 | ------------------ | --------------------- |
@@ -30,7 +30,7 @@ Todas as tabelas estão na pasta `data`.
 | `date`             | data do registro      |
 
 **Tabela Segmentação**
-* Classifica itens de acordo com sua criticidade
+* Classifica itens de acordo com sua criticidade.
 
 | Campo            | Descrição           |
 | ---------------- | ------------------- |
@@ -49,9 +49,9 @@ Todas as tabelas estão na pasta `data`.
 | D        | baixo impacto    |
 
 ## Preparação dos Dados
-* Primeiro passo, foi fazer uma analise exploratoria das duas tabelas, onde observa-se que estão corretas sem erros
-* Depois disso, unificar as duas tabelas com histórico de estoque e segmentação mais recente. Para isso, cria um conjunto de resultados temporarios com função de tabela para pegar a data de injestao no sistema mais recente da tabela `tb_segmentacao`. 
+Primeiro passo foi realizar uma **análise exploratória das duas tabelas** verificando consistência nos dados. Em seguida, foi construída uma **base unificada** entre as duas tabelas (`tb_segmentacao` e `tb_estoque`).
 
+Para garantir a segmentação mais atual, foi utilizada a seguinte função de janela:
 ```sql
       ROW_NUMBER() OVER (
         PARTITION BY codigo, projeto
@@ -61,7 +61,9 @@ Todas as tabelas estão na pasta `data`.
   WHERE rn = 1
 ```
 
-Após isso, aplica `LEFT JOIN` com as chaves `projeto + codigo` mantendo os itens sem classificação denominados `sem segmentacao` na tabela `tb_estoque`, isso evita perda de informação porem aumenta o viés.
+Isso permite selecionar apenas o **registro mais recente de segmentação (data de injestão) para cada item e projeto**.
+
+Após isso, foi aplicado `LEFT JOIN` entre as tabelas com as chaves `projeto + codigo`:
 
 ```sql
   FROM `tembici-processo-seletivo.bike_estoque.tb_estoque` AS est
@@ -70,15 +72,19 @@ Após isso, aplica `LEFT JOIN` com as chaves `projeto + codigo` mantendo os iten
     AND est.projeto = seg.projeto
 ```
 
-Resultando uma tabela unificada para possiveis análises como ruptura, ressuprimento e redistribuição
+Itens sem segmentação foram mantidos na base e classificados como **"sem segmentacao"**.
 
-## Principais Métricas
+Isso evita perda de informação, embora possa introduzir algum viés analítico.
+
+O resultado da consulta `base_unificada.sql` é uma tabela utilizada para análises de ruptura, ressuprimento e redistribuição.
+
+## Principais Métricas/Indicadores
 * **Ruptura de estoque**
 	- Item considerado como falta de estoque 
 		```
 		saldo_estoque = 0 
 		```
-  	- Obs: não existem dados de demanda, ou seja, não é possivel analisar estoque disponível é menor que demanda esperada. Para uma possivel solução, foi considerado nível médio de estoque ao longo do tempo.
+	- Obs: não existem dados explícitos de demanda. Portanto não é possível comparar estoque com demanda esperada.
  
 * **Taxa de Ruptura**
 	- Percentual de dias com estoque zerado. Permitindo comparar itens com históricos diferentes.
@@ -91,10 +97,10 @@ Resultando uma tabela unificada para possiveis análises como ruptura, ressuprim
   	    estoque hoje = 0
 		estoque ontem > 0
 		```
-	- Identificando quando um item entra em ruptura novamente e quantidade de ocorrencias.
+	- Isso identifica quando um item **entra novamente em ruptura**.
 
 * **Consumo médio diário**
-	- Como não há dados explicítos de consumo, foi estimado usando variação negativa de estoque.
+	- Como não há dados explícitos de consumo, foi estimado usando **variação negativa de estoque**.
 		```
   		consumo médio = média das variações negativas
 		```
@@ -106,7 +112,7 @@ Resultando uma tabela unificada para possiveis análises como ruptura, ressuprim
   	  ```
 
 * **Ação de ressuprimento**
-	- Identifica itens com coberturas de dias baixa para reposicao, monitoramento e excesso de estoque.
+	- Itens com baixa cobertura devem ser priorizados para reposição.
 	```
 	Regra:
  		cobertura < 5 -> ressuprimento
@@ -115,7 +121,7 @@ Resultando uma tabela unificada para possiveis análises como ruptura, ressuprim
  	```
 
 * **Sinal de redistribuição**
-	- Identificar itens com cobertura de dias com excesso ou ruptura, dando oportunidades de redistribuição de estoque entre projetos ou nao.
+	- Identifica oportunidades de redistribuir estoque entre projetos.
 	```
  	Regra:
 		cobertura > 20 -> candidato a redistribuicao
@@ -145,5 +151,27 @@ Foram identificadas oportunidades de redistribuição entre projetos do mesmo it
 
 
 ## Respondendo as perguntas
+### 1. Onde ocorrem rupturas de estoque?
+As rupturas ocorrem quando o saldo de estoque é igual a zero, permitindo identificar principalmente:
 
+* itens com maior frequência de ruptura
+* itens com ruptura recorrente
+* itens em ruptura no último registro da base
 
+A consulta `ruptura_view.sql` permite priorizar os itens com maior risco.
+
+### 2. Quais itens são mais críticos para a operação?
+Itens classificados como segmento A são os mais críticos. Quando ocorre ruptura nesses itens, o impacto operacional é maior.
+
+A consulta `ruptura_itens_a.sql` lista os itens críticos que estão em ruptura no último dia da base.
+
+### 3. Existem oportunidades de ressuprimento ou redistribuição?
+Sim, o ressuprimento acontece quando os itens estão com baixa cobertura que devem ser repostos rapidamente. Já redistribuição ocorre quando um item contem excesso e cobertura de dias alta.
+
+A consulta `ressuprimento_redistribuicao.sql` identifica automaticamente esses casos.
+
+### 4. Como melhorar a gestão de estoque baseada em criticidade?
+Algumas melhorias possíveis:
+* Melhorar a qualidade dos dados, identificando e classificando os itens sem segmentação.
+* Monitorar indicares de estoque: saldo de estoque, taxa de ruptura, cobertura média e itens críticos em ruptura.
+* Sempre redistribuir os estoque se possivel antes de realizar reposição.
