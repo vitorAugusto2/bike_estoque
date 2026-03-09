@@ -17,7 +17,8 @@ A análise utiliza os dados históricos de estoque e segmentação de criticidad
 	Indicadores de decisão (ressuprimento/redistribuição)
 
 ## Fonte de Dados
-Todas as tabelas estão localizada na pasta `data`.
+Todas as tabelas brutas estão localizada na pasta `data\raw`.
+As tabelas transformadas estão localizada em `data\trans`.
 
 **Tabela Estoque (tb_estoque)**
 * Tabela com registros diários de estoque.
