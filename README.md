@@ -73,6 +73,40 @@ Após isso, aplica `LEFT JOIN` com as chaves `projeto + codigo` mantendo os iten
 Resultando uma tabela unificada para possiveis análises como ruptura, ressuprimento e redistribuição
 
 ## Principais Métricas
+* **Ruptura de estoque**
+	- Item considerado como falta de estoque 
+		```
+		saldo_estoque = 0 
+		```
+  	- Obs: não existem dados de demanda, ou seja, não é possivel analisar estoque disponível é menor que demanda esperada. Para uma possivel solução, foi considerado nível médio de estoque ao longo do tempo.
+ 
+* **Taxa de Ruptura**
+	- Percentual de dias com estoque zerado. Permitindo comparar itens com históricos diferentes.
+	    ```
+		taxa_ruptura = dias_com_ruptura / dias_total
+		```
+* **Eventos de ruptura**
+  	- Um novo evento de ruptura ocorre quando:
+  	  	```
+  	    estoque hoje = 0
+		estoque ontem > 0
+		```
+	- Identificando quando um item entra em ruptura novamente e quantidade de ocorrencias.
+
+* **Consumo médio diário**
+	- Como não há dados explicítos de consumo, foi estimado usando variação negativa de estoque.
+		```
+  		consumo médio = média das variações negativas
+		```
+
+* **Cobertura de estoque**
+  	- Número estimado de dias que o estoque atual consegue sustentar.
+  	  ```
+      cobertura = estoque_atual / consumo_medio_diario
+  	  ```
+
+* **Ação de ressuprimento**
+	- 
 
 ## Pontos Importantes
 ### **Ruptura em itens críticos**
