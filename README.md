@@ -115,6 +115,12 @@ Resultando uma tabela unificada para possiveis análises como ruptura, ressuprim
  	```
 
 * **Sinal de redistribuição**
+	- Identificar itens com cobertura de dias com excesso ou ruptura, dando oportunidades de redistribuição de estoque entre projetos ou nao.
+	```
+ 	Regra:
+		cobertura > 20 -> candidato a redistribuicao
+ 		sem oportunidade clara
+	```
 
 ## Pontos Importantes
 ### **Ruptura em itens críticos**
