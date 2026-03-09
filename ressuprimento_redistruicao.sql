@@ -144,6 +144,9 @@ SELECT
   END AS acao_ressuprimento,
   CASE
     -- sinaliza oportunidade de redistribuir quando o mesmo SKU tem sobra em um projeto e falta em outro
+    -- regra de redistribuição
+    -- * cobertura de dias > 20 -> canditado a redistribuição
+    -- * senao -> sem oportunidade clara
     WHEN res.maior_estoque_mesmo_codigo > 20
          AND res.menor_estoque_mesmo_codigo = 0
          AND bsa.estoque_atual = res.maior_estoque_mesmo_codigo
